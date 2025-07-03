@@ -1,8 +1,4 @@
-Here’s a complete `README.md` file for your **Meeting Bot Assessment** project — formatted professionally with clear technical documentation and a concise breakdown of all required sections.
-
----
-
-## ✅ `README.md`
+# Meeting Bot Assessment
 
 ```markdown
 # 🧠 Meeting Bot - AI Transcript Assistant
