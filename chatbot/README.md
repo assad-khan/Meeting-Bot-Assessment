@@ -1,140 +1,128 @@
-# Meeting Bot Assessment
-
-```markdown
 # 🧠 Meeting Bot - AI Transcript Assistant
 
-This project is an AI-powered meeting assistant that processes uploaded meeting transcripts and enables users to chat with it for summaries, decisions, action items, participants, and follow-up contextual questions. It supports session-level memory and prompt intent routing to intelligently handle user queries.
+An AI-powered assistant that processes meeting transcripts and allows users to chat with it to get summaries, decisions, action items, participants, and follow-up contextual answers. The system supports session-level memory, prompt intent routing, and semantic search to intelligently handle user queries.
 
 ---
 
-## 📌 Overview
+## 📌 Features
 
-This solution provides:
-
-- 📄 **Transcript analysis** using vector search and semantic retrieval.
-- 🔁 **Prompt routing** to handle summaries, participants, action items, and general questions.
-- 🧠 **Context-aware follow-up answers** via session-level memory.
-- 🧭 **Conversation tracing and logging** for debugging and observability.
-- 🧾 **Clean modular design** for easy extensibility and maintainability.
-
-The system uses LangChain, FAISS, and OpenAI's models to enable semantic understanding and interactive conversation over meeting content.
+* 📄 **Transcript Analysis**: Vector search and semantic retrieval of uploaded transcripts.
+* 🔁 **Prompt Routing**: Handles summaries, participants, tasks, and general follow-ups.
+* 🧠 **Context-Aware Responses**: Maintains session memory for coherent conversations.
+* 🔭 **Tracing and Logging**: Logs conversations, intents, and system behavior.
+* 🗞 **Modular Design**: Clean architecture for extensibility and maintenance.
 
 ---
 
-## 🧩 How Each Module Works
+## 🤩 Modules Overview
 
 ### `server.py`
-- Flask server that handles two API endpoints:
-  - `POST /upload`: Stores the meeting transcript in session.
-  - `POST /chat`: Routes user messages to `engine.py` and returns the AI-generated response.
-- Manages `session_id`-based in-memory session tracking and chat history.
+
+* Flask backend with two main endpoints:
+
+  * `POST /upload`: Uploads and stores meeting transcript per session.
+  * `POST /chat`: Handles chat messages and routes them to the AI engine.
+* Manages sessions and stores in-memory chat history.
 
 ### `chatbot/engine.py`
-- Main logic for:
-  - Transcript summarization
-  - Prompt classification (routing)
-  - Vector search over transcript
-  - Action item and participant extraction
-  - Conversational memory for follow-up queries
-- Uses:
-  - `LangChain` for building LLM chains
-  - `FAISS` for vector-based retrieval
-  - `ConversationBufferMemory` for memory persistence
 
-### Logging/Tracing
-- All user messages, intents, and responses are logged with timestamps.
-- Error handling with clear messages and traceback logging.
-- Supports integration with LangSmith (optional).
+* Core AI engine:
+
+  * Transcript summarization
+  * Intent classification and routing
+  * Vector search using FAISS
+  * Action item and participant extraction
+  * Conversational memory
+* Uses:
+
+  * `LangChain` for LLM workflows
+  * `FAISS` for fast vector similarity search
+  * `ConversationBufferMemory` for memory tracking
 
 ---
 
 ## 🔁 Prompt Routing Logic
 
-User prompts are classified into four categories using simple keyword-based routing:
+Prompts are classified using keyword-based logic:
 
-| Intent         | Trigger Keywords                              | Action Taken                             |
-|----------------|------------------------------------------------|------------------------------------------|
-| `summary`      | "summarize", "summary", "recap"                | Calls `summarize_transcript()`           |
-| `participants` | "participants", "attendees", "who attended"    | Calls `extract_participants()`           |
-| `actions`      | "action items", "tasks", "to-do", "assigned"   | Calls `extract_action_items()`           |
-| `chat`         | Anything else                                  | Runs through `ConversationalRetrievalChain` for follow-up or QA |
+| Intent         | Trigger Keywords                             | Action                           |
+| -------------- | -------------------------------------------- | -------------------------------- |
+| `summary`      | "summarize", "summary", "recap"              | `summarize_transcript()`         |
+| `participants` | "participants", "attendees", "who attended"  | `extract_participants()`         |
+| `actions`      | "action items", "tasks", "to-do", "assigned" | `extract_action_items()`         |
+| `chat`         | Anything else                                | `ConversationalRetrievalChain()` |
 
-Routing logic is handled via a `classify_intent()` function which returns the intent and dynamically selects the appropriate handler.
+Handled using a `classify_intent()` function that routes queries accordingly.
 
 ---
 
 ## 🧠 System Architecture
 
-### 🖼️ Diagram (Text-based)
+### 🖼️ Architecture Diagram (Text Format)
 
 ```
-
-\[Frontend UI]
-↓ (via HTTP)
-\[Flask Backend - server.py]
-↓
-\[Chat Engine - engine.py]
-├── Transcript Summary       → LLMChain (summarize)
-├── Participant Extraction   → LLMChain (participants)
-├── Action Item Extraction   → LLMChain (actions)
-└── Conversational QA        → ConversationalRetrievalChain
-├── Memory            → ConversationBufferMemory
-└── Retrieval         → FAISS (vector store per session)
-
+[Frontend UI]
+     ↓
+[Flask Backend - server.py]
+     ↓
+[Chat Engine - engine.py]
+├── Transcript Summary        → LLMChain
+├── Participant Extraction    → LLMChain
+├── Action Item Extraction    → LLMChain
+└── Conversational QA         → ConversationalRetrievalChain
+    ├── Memory                → ConversationBufferMemory
+    └── Retrieval             → FAISS Vector Store
 ```
-
-### 🔧 Workflow
-
-1. **Transcript Upload**: Stored in session and embedded for retrieval.
-2. **User Sends Query**: Routed based on intent (summary, participants, actions, or general).
-3. **Response Generation**:
-   - For structured queries → LLMChain prompt templates
-   - For chat/follow-up → LangChain memory + retriever chain
-4. **History Update**: User message and bot response added to session memory.
-5. **Logs**: Logged with timestamp and session ID for debugging.
 
 ---
 
-## 📂 Folder Structure
+## ⚙️ Workflow
+
+1. **Upload Transcript**: Sent via `/upload`, stored in session, and embedded for retrieval.
+2. **User Query**: Sent via `/chat`, classified by intent.
+3. **Response Generation**:
+
+   * Structured prompts → routed to specific LLMChains.
+   * General questions → handled by retriever + memory chain.
+4. **Session Memory**: Maintains conversation history.
+5. **Logging**: All interactions are logged for observability and debugging.
+
+---
+
+## 📂 Project Structure
 
 ```
-
 meeting-bot/
 ├── chatbot/
-│   └── engine.py         # Main AI engine logic (you implemented this)
-├── server.py             # Flask backend with endpoints
-├── frontend/             # Chat UI (provided)
-├── requirements.txt      # Required Python dependencies
-└── README.md             # You're reading this!
-
-````
+│   └── engine.py         # AI engine logic
+├── server.py             # Flask API server
+├── frontend/             # Chat UI
+│   └── index.html         
+│   └── scripts.js        
+│   └── style.css       
+├── requirements.txt      # Python dependencies
+└── README.md             # Project documentation
+```
 
 ---
 
-## ✅ Dependencies
+## ✅ Installation
 
-Be sure to install:
+Install required Python packages:
 
-```txt
-langchain
-openai
-faiss-cpu
-````
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-## 🔐 Environment Variables
+## 🔐 Environment Setup
 
-To keep your OpenAI API key secure and configurable, create a `.env` file in the project root:
-
-```
-touch .env
-```
-
-Inside `.env`, add:
+Add your OpenAI API key inside `.env`:
 
 ```env
-OPENAI_API_KEY="your_openai_api_key_here
+OPENAI_API_KEY="your_openai_api_key_here"
+```
 
 ---
 
@@ -143,10 +131,5 @@ OPENAI_API_KEY="your_openai_api_key_here
 * "Summarize the meeting"
 * "Who participated?"
 * "What are the action items?"
+* "What decisions were made?"
 * "What did I just ask you?"
-* "What were the key decisions made?"
-
-
-"
-
-
